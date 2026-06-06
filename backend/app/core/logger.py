@@ -1,0 +1,1 @@
+# Global application logging configuration
