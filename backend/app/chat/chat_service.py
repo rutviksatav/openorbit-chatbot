@@ -107,22 +107,22 @@ class ChatService:
         )
 
 
-        # if (
-        #     chat_session.title
-        #     == "New Chat"
-        # ):
+        if (
+            chat_session.title
+            == "New Chat"
+        ):
 
-        #     title = await generate_chat_title(
-        #         content
-        #     )
+            title = await generate_chat_title(
+                content
+            )
 
-        #     await (
-        #         self.session_repository
-        #         .update_title(
-        #             session_id=session_id,
-        #             title=title
-        #         )
-        #     )
+            await (
+                self.session_repository
+                .update_title(
+                    session_id=session_id,
+                    title=title
+                )
+            )
 
 
         return {
@@ -145,24 +145,26 @@ class ChatService:
 
         full_response = ""
 
-        async for chunk in (
-            self.provider.stream_response(
-                conversation
-            )
-        ):
+        try:
+            async for chunk in (
+                self.provider.stream_response(
+                    conversation
+                )
+            ):
 
-            full_response += chunk
+                full_response += chunk
 
-            yield chunk
-
-        await (
-            self.message_repository
-            .create_message(
-                session_id=session_id,
-                role="assistant",
-                content=full_response
-            )
-        )
+                yield chunk
+        finally:
+            if full_response:
+                await (
+                    self.message_repository
+                    .create_message(
+                        session_id=session_id,
+                        role="assistant",
+                        content=full_response
+                    )
+                )
 
     async def get_session_details(
     self,

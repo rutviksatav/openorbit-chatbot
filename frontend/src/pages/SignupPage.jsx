@@ -3,22 +3,49 @@ import InputField from "../components/InputField";
 import PrimaryButton from "../components/PrimaryButton";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { login } from "../services/auth";
+import { signup, login } from "../services/auth";  // ✅ import login too
 
-function LoginPage() {
+function SignupPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirm, setConfirm] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
-    async function handleLogin() {
+    async function handleSignup() {
+        setError("");
+
+        if (!email || !password || !confirm) {
+            setError("All fields are required.");
+            return;
+        }
+
+        if (password !== confirm) {
+            setError("Passwords do not match.");
+            return;
+        }
+
+        if (password.length < 6) {
+            setError("Password must be at least 6 characters.");
+            return;
+        }
+
         try {
             setLoading(true);
-            setError("");
+
+            // Step 1: Create the account
+            await signup(email, password);
+
+            // Step 2: Auto login with same credentials
             const data = await login(email, password);
+
+            // Step 3: Save token
             localStorage.setItem("token", data.access_token);
+
+            // Step 4: Go straight to chat
             navigate("/chat");
+
         } catch (err) {
             setError(err.message);
         } finally {
@@ -93,7 +120,7 @@ function LoginPage() {
                             className="text-xs uppercase tracking-widest"
                             style={{ color: "rgba(120,145,165,0.75)", fontFamily: "monospace" }}
                         >
-                            AI Workspace Platform
+                            Create your account
                         </p>
                     </div>
 
@@ -116,6 +143,15 @@ function LoginPage() {
                         onChange={(e) => setPassword(e.target.value)}
                     />
 
+                    <InputField
+                        label="Confirm Password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={confirm}
+                        icon="🔒"
+                        onChange={(e) => setConfirm(e.target.value)}
+                    />
+
                     {/* Error */}
                     {error && (
                         <div
@@ -131,19 +167,19 @@ function LoginPage() {
                         </div>
                     )}
 
-                    <PrimaryButton onClick={handleLogin}>
-                        {loading ? "Signing In..." : "Sign In"}
+                    <PrimaryButton onClick={handleSignup}>
+                        {loading ? "Creating Account..." : "Create Account"}
                     </PrimaryButton>
 
-                    {/* ✅ Signup link — NEW */}
+                    {/* Link to Login */}
                     <p className="text-center text-xs" style={{ color: "rgba(100,130,150,0.6)" }}>
-                        Don't have an account?{" "}
+                        Already have an account?{" "}
                         <Link
-                            to="/signup"
+                            to="/"
                             className="font-semibold transition-colors"
                             style={{ color: "#00b8a0" }}
                         >
-                            Sign Up
+                            Sign In
                         </Link>
                     </p>
 
@@ -173,4 +209,4 @@ function LoginPage() {
     );
 }
 
-export default LoginPage;
+export default SignupPage;

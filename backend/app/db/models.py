@@ -116,6 +116,11 @@ class Message(Base):
         default=datetime.utcnow
     )
 
+    feedback = Column(
+        String,
+        nullable=True
+    )
+
     session = relationship(
         "ChatSession",
         back_populates="messages"

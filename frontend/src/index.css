@@ -1,20 +1,23 @@
 @import "tailwindcss";
 
 :root {
-
     --bg-primary: #0a0a0a;
-
-    --bg-secondary: #111111;
-
-    --bg-card: #171717;
-
-    --border-color: #262626;
-
+    --bg-secondary: #121214;
+    --bg-card: #18181b;
+    --border-color: rgba(255, 255, 255, 0.06);
     --text-primary: #fafafa;
-
     --text-secondary: #a1a1aa;
+    --accent: #06b6d4;
+}
 
-    --accent: #4f46e5;
+html.light {
+    --bg-primary: #fbfbfd;
+    --bg-secondary: #f4f4f5;
+    --bg-card: #ffffff;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --text-primary: #18181b;
+    --text-secondary: #71717a;
+    --accent: #06b6d4;
 }
 
 html,
@@ -36,53 +39,92 @@ body,
 }
 
 body {
-
     font-family:
-
+        Outfit,
         Inter,
-
         system-ui,
-
         sans-serif;
-
     background:
-
         var(--bg-primary);
-
     color:
-
         var(--text-primary);
-
     overflow: hidden;
-
     -webkit-font-smoothing: antialiased;
-
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* Futuristic Tech Styles */
+.font-display {
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.font-mono-tech {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.bg-cyber-grid {
+    background-size: 50px 50px;
+    background-image: 
+        linear-gradient(to right, rgba(128, 128, 128, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(128, 128, 128, 0.025) 1px, transparent 1px);
+}
+
+.bg-radial-glow {
+    background: radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.05) 0%, rgba(99, 102, 241, 0.02) 40%, rgba(0, 0, 0, 0) 70%);
+}
+
+.bg-radial-glow-input {
+    background: radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.02) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
 
 /* Scrollbar */
 
 ::-webkit-scrollbar {
-
-    width: 6px;
+    width: 5px;
+    height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-
     background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-
-    background: #27272a;
-
+    background: rgba(6, 182, 212, 0.2);
     border-radius: 999px;
+    transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
+    background: rgba(6, 182, 212, 0.45);
+}
 
-    background: #3f3f46;
+/* Animations */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cursorBlink {
+    50% { opacity: 0; }
+}
+
+.typing-cursor {
+    display: inline-block;
+    color: #06b6d4;
+    animation: cursorBlink 0.8s step-start infinite;
+    margin-left: 2px;
 }
 
 

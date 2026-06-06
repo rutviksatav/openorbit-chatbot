@@ -7,3 +7,18 @@ class CreateMessageRequest(
 ):
 
     content: str
+
+
+class EditMessageRequest(
+    BaseModel
+):
+
+    content: str
+
+
+class FeedbackRequest(
+    BaseModel
+):
+
+    feedback: str | None = None
+

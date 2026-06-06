@@ -21,7 +21,9 @@ from app.repositories.message_repository import (
 )
 
 from app.schemas.message_schema import (
-    CreateMessageRequest
+    CreateMessageRequest,
+    EditMessageRequest,
+    FeedbackRequest
 )
 
 from app.chat.title_generator import (
@@ -62,7 +64,9 @@ async def create_session(
 
         "id": session.id,
 
-        "title": session.title
+        "title": session.title,
+
+        "created_at": session.created_at.isoformat() if session.created_at else None
     }
 
 @router.get("/sessions")
@@ -81,7 +85,8 @@ async def get_sessions(
 
         {
             "id": s.id,
-            "title": s.title
+            "title": s.title,
+            "created_at": s.created_at.isoformat() if s.created_at else None
         }
 
         for s in sessions
@@ -197,7 +202,11 @@ async def get_messages(
 
             "role": message.role,
 
-            "content": message.content
+            "content": message.content,
+
+            "created_at": message.created_at.isoformat() if message.created_at else None,
+
+            "feedback": message.feedback
         }
 
         for message in messages
@@ -286,3 +295,72 @@ async def delete_session(
 
         "status": "deleted"
     }
+
+
+@router.put("/sessions/{session_id}/messages/{message_id}")
+async def edit_message(
+    session_id: int,
+    message_id: int,
+    payload: EditMessageRequest,
+    current_user = Depends(get_current_user)
+):
+    chat_session = await repository.get_session_by_id(session_id)
+    if not chat_session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if chat_session.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    updated = await message_repository.update_message_content(message_id, payload.content)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    await message_repository.delete_messages_after(session_id, message_id)
+
+    return {"status": "updated"}
+
+
+@router.delete("/sessions/{session_id}/messages/last")
+async def delete_last_message(
+    session_id: int,
+    current_user = Depends(get_current_user)
+):
+    chat_session = await repository.get_session_by_id(session_id)
+    if not chat_session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if chat_session.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    messages = await message_repository.get_messages_by_session(session_id)
+    if not messages:
+        raise HTTPException(status_code=400, detail="No messages in session")
+
+    last_message = messages[-1]
+    if last_message.role != "assistant":
+        raise HTTPException(status_code=400, detail="Last message is not from assistant")
+
+    deleted = await message_repository.delete_last_message(session_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    return {"status": "deleted"}
+
+
+@router.post("/sessions/{session_id}/messages/{message_id}/feedback")
+async def update_feedback(
+    session_id: int,
+    message_id: int,
+    payload: FeedbackRequest,
+    current_user = Depends(get_current_user)
+):
+    chat_session = await repository.get_session_by_id(session_id)
+    if not chat_session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if chat_session.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    updated = await message_repository.update_message_feedback(message_id, payload.feedback)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    return {"status": "updated"}
+
