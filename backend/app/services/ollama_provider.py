@@ -1,4 +1,4 @@
-from ollama import chat
+from ollama import AsyncClient
 
 from app.services.llm_provider import (
     LLMProvider
@@ -9,12 +9,16 @@ class OllamaProvider(
     LLMProvider
 ):
 
+    def __init__(self):
+        self.client = AsyncClient()
+
+
     async def generate_response(
         self,
         messages: list
     ) -> str:
 
-        response = chat(
+        response = await self.client.chat(
 
             model="gemma4:e2b",
 
@@ -31,7 +35,7 @@ class OllamaProvider(
         messages: list
     ):
 
-        stream = chat(
+        stream = await self.client.chat(
 
             model="gemma3:4b",
 
@@ -40,7 +44,7 @@ class OllamaProvider(
             stream=True
         )
 
-        for chunk in stream:
+        async for chunk in stream:
 
             content = (
                 chunk["message"]["content"]

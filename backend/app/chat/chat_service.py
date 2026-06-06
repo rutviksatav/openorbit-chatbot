@@ -61,7 +61,7 @@ class ChatService:
         ]
 
 
-    
+
 
 
     async def send_message(
@@ -107,22 +107,22 @@ class ChatService:
         )
 
 
-        if (
-            chat_session.title
-            == "New Chat"
-        ):
+        # if (
+        #     chat_session.title
+        #     == "New Chat"
+        # ):
 
-            title = await generate_chat_title(
-                content
-            )
+        #     title = await generate_chat_title(
+        #         content
+        #     )
 
-            await (
-                self.session_repository
-                .update_title(
-                    session_id=session_id,
-                    title=title
-                )
-            )
+        #     await (
+        #         self.session_repository
+        #         .update_title(
+        #             session_id=session_id,
+        #             title=title
+        #         )
+        #     )
 
 
         return {

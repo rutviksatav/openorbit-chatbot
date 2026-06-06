@@ -22,7 +22,9 @@ import {
 
     sendMessage,
 
-    streamMessage
+    streamMessage,
+
+    getMessages
 
 } from "../services/message";
 
@@ -59,11 +61,15 @@ function MessageInput({
 
         const userMessage =
             message;
+        setMessage("");
 
         try {
 
             setSending(true);
 
+            const assistantId =
+    `assistant-${Date.now()}`;
+
             setMessages(
 
                 prev => [
@@ -72,53 +78,36 @@ function MessageInput({
 
                     {
 
-                        id: Date.now(),
+                        id: `user-${Date.now()}`,
 
                         role: "user",
 
                         content: userMessage
+                    },
 
-                    }
-
-                ]
-            );
-
-            setMessage("");
-
-            const textarea =
-                document.querySelector(
-                    "textarea"
-                );
-
-            if (textarea) {
-
-                textarea.style.height =
-                    "auto";
-            }
-
-            const assistantId =
-                `assistant-${Date.now()}`;
-
-            console.log(
-                "ASSISTANT ID:",
-                assistantId
-            );
-
-            setMessages(
-                prev => [
-                    ...prev,
                     {
+
                         id: assistantId,
+
                         role: "assistant",
+
                         content: ""
                     }
                 ]
             );
 
+            console.time("POST");
+
             await sendMessage(
                 sessionId,
                 userMessage
             );
+
+            console.timeEnd("POST");
+
+            console.time("STREAM_START");
+
+
 
             const eventSource =
 
@@ -127,63 +116,63 @@ function MessageInput({
                     sessionId,
 
                     (chunk) => {
+                        console.timeEnd(
+                            "STREAM_START"
+                        );
 
                         console.log(
                             "CHUNK RECEIVED:",
                             chunk
                         );
 
-                        flushSync(() => {
+                        setMessages(
 
-                            setMessages(
+                            prev => {
 
-                                prev => {
+                                const updated = [...prev];
 
-                                    const updated = [...prev];
+                                const assistantIndex =
 
-                                    const assistantIndex =
+                                    updated.findIndex(
 
-                                        updated.findIndex(
+                                        message =>
 
-                                            message =>
-
-                                                message.id === assistantId
-                                        );
-
-                                    if (
-
-                                        assistantIndex === -1
-
-                                    ) {
-
-                                        return prev;
-                                    }
-
-                                    updated[
-                                        assistantIndex
-                                    ] = {
-
-                                        ...updated[
-                                            assistantIndex
-                                        ],
-
-                                        content:
-
-                                            updated[
-                                                assistantIndex
-                                            ].content + chunk
-                                    };
-                                    console.log(
-                                        "UPDATED CONTENT:",
-                                        updated[
-                                            assistantIndex
-                                        ].content
+                                            message.id === assistantId
                                     );
 
-                                    return updated;
+                                if (
+
+                                    assistantIndex === -1
+
+                                ) {
+
+                                    return prev;
                                 }
-                            );
-                        });
+
+                                updated[
+                                    assistantIndex
+                                ] = {
+
+                                    ...updated[
+                                        assistantIndex
+                                    ],
+
+                                    content:
+
+                                        updated[
+                                            assistantIndex
+                                        ].content + chunk
+                                };
+                                console.log(
+                                    "UPDATED CONTENT:",
+                                    updated[
+                                        assistantIndex
+                                    ].content
+                                );
+
+                                return updated;
+                            }
+                        );
                     }
                 );
 
@@ -210,7 +199,17 @@ function MessageInput({
 
                     eventSource.close();
 
-                    setSending(false);
+                    // Sync messages with the database to get real message IDs
+                    getMessages(sessionId)
+                        .then(messagesData => {
+                            setMessages(messagesData);
+                        })
+                        .catch(err => {
+                            console.error("Failed to sync messages:", err);
+                        })
+                        .finally(() => {
+                            setSending(false);
+                        });
                 }
             );
 

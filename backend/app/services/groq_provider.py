@@ -1,4 +1,4 @@
-from groq import Groq
+from groq import AsyncGroq
 
 from app.services.llm_provider import (
     LLMProvider
@@ -16,7 +16,7 @@ class GroqProvider(
 
     def __init__(self):
 
-        self.client = Groq(
+        self.client = AsyncGroq(
             api_key=GROQ_API_KEY
         )
 
@@ -26,7 +26,7 @@ class GroqProvider(
         messages: list
     ) -> str:
 
-        response = (
+        response = await (
             self.client.chat.completions.create(
                 model=LLM_MODEL,
                 messages=messages
@@ -46,7 +46,7 @@ class GroqProvider(
         messages: list
     ):
 
-        stream = (
+        stream = await (
             self.client.chat.completions.create(
                 model=LLM_MODEL,
                 messages=messages,
@@ -54,7 +54,7 @@ class GroqProvider(
             )
         )
 
-        for chunk in stream:
+        async for chunk in stream:
 
             delta = (
                 chunk

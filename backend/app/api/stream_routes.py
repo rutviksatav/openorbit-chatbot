@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import (
     APIRouter
 )
@@ -121,6 +122,9 @@ async def stream_chat(
             yield {
                 "data": chunk
             }
+
+            # artificial delay to slow down streaming slightly
+            await asyncio.sleep(0.02)
 
         print(
             f"STREAM FINISHED FOR SESSION {session_id}"
