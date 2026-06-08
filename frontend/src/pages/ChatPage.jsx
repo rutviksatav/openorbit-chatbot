@@ -21,9 +21,9 @@ import {
 } from "react-router-dom";
 
 import {
-
-    getCurrentUser
-
+    getCurrentUser,
+    login,
+    signup
 } from "../services/auth";
 
 import Sidebar
@@ -70,6 +70,8 @@ function ChatPage() {
 
     const [user, setUser] =
         useState(null);
+    const [isGuest, setIsGuest] =
+        useState(false);
 
     const [sessions, setSessions] =
         useState([]);
@@ -86,6 +88,7 @@ function ChatPage() {
     const eventSourceRef = useRef(null);
 
     const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const [showAuthModal, setShowAuthModal] = useState(false);
     const [theme, setTheme] = useState(() => {
         return localStorage.getItem("openorbit_theme") || "dark";
     });
@@ -192,6 +195,10 @@ function ChatPage() {
 
     // Callback when sending a new message
     async function handleSendMessage(content) {
+        if (!user || (isGuest && messages.length >= 2)) {
+            setShowAuthModal(true);
+            return;
+        }
 
         if (sending) {
             return;
@@ -254,6 +261,10 @@ function ChatPage() {
 
     // Callback when regenerating response
     async function handleRegenerateResponse() {
+        if (!user || isGuest) {
+            setShowAuthModal(true);
+            return;
+        }
         if (!activeSession || sending) return;
 
         try {
@@ -283,6 +294,10 @@ function ChatPage() {
 
     // Callback when editing a prompt
     async function handleEditPrompt(messageId, newContent) {
+        if (!user || isGuest) {
+            setShowAuthModal(true);
+            return;
+        }
         if (!activeSession || sending) return;
 
         try {
@@ -312,6 +327,10 @@ function ChatPage() {
 
     // Callback when adding feedback (like/dislike)
     async function handleFeedback(messageId, type) {
+        if (!user || isGuest) {
+            setShowAuthModal(true);
+            return;
+        }
         if (!activeSession) return;
 
         try {
@@ -343,23 +362,42 @@ function ChatPage() {
         async function loadUser() {
 
             try {
+                let token = localStorage.getItem("token");
+                let guestFlag = localStorage.getItem("is_guest") === "true";
 
-                const data =
-                    await getCurrentUser();
+                if (!token) {
+                    const guestEmail = `guest_${Date.now()}_${Math.floor(Math.random() * 1000)}@openorbit.ai`;
+                    const guestPassword = "GuestPassword123!";
+                    
+                    try {
+                        await signup(guestEmail, guestPassword);
+                        const loginData = await login(guestEmail, guestPassword);
+                        token = loginData.access_token;
+                        localStorage.setItem("token", token);
+                        localStorage.setItem("is_guest", "true");
+                        guestFlag = true;
+                    } catch (e) {
+                        console.error("Failed to create guest session silently:", e);
+                    }
+                }
 
-                const localName = localStorage.getItem("openorbit_profile_name");
-                const localEmail = localStorage.getItem("openorbit_profile_email");
-                if (localName) data.name = localName;
-                if (localEmail) data.email = localEmail;
+                if (token) {
+                    const data = await getCurrentUser();
+                    const localName = localStorage.getItem("openorbit_profile_name");
+                    const localEmail = localStorage.getItem("openorbit_profile_email");
+                    if (localName) data.name = localName;
+                    if (localEmail) data.email = localEmail;
 
-                setUser(data);
+                    setUser(data);
+                    setIsGuest(guestFlag);
 
-                const sessionData =
-                    await getSessions();
-
-                setSessions(
-                    sessionData
-                );
+                    if (!guestFlag) {
+                        const sessionData = await getSessions();
+                        setSessions(sessionData);
+                    } else {
+                        setSessions([]);
+                    }
+                }
 
                 // Start on new chat welcome page immediately on load
                 setActiveSession(null);
@@ -428,6 +466,10 @@ function ChatPage() {
 
 
     async function handleNewChat() {
+        if (!user || isGuest) {
+            setShowAuthModal(true);
+            return;
+        }
         if (activeSession && messages.length === 0) {
             return;
         }
@@ -462,6 +504,10 @@ function ChatPage() {
         sessionId
 
     ) {
+        if (!user || isGuest) {
+            setShowAuthModal(true);
+            return;
+        }
 
         try {
 
@@ -499,6 +545,10 @@ function ChatPage() {
     }
 
     async function handleDeleteAllChats() {
+        if (!user || isGuest) {
+            setShowAuthModal(true);
+            return;
+        }
         const confirmed = window.confirm("Are you sure you want to delete all chats? This cannot be undone.");
         if (!confirmed) return;
         try {
@@ -536,6 +586,11 @@ function ChatPage() {
             localStorage.removeItem("token");
             localStorage.removeItem("openorbit_profile_name");
             localStorage.removeItem("openorbit_profile_email");
+            setUser(null);
+            setSessions([]);
+            setActiveSession(null);
+            setMessages([]);
+            setIsLoggingOut(false);
             navigate("/");
         }, 1200);
     }
@@ -583,6 +638,7 @@ function ChatPage() {
 
             <Sidebar
                 user={user}
+                isGuest={isGuest}
                 open={sidebarOpen}
                 sessions={sessions}
                 activeSession={activeSession}
@@ -633,6 +689,8 @@ function ChatPage() {
                     onFeedback={handleFeedback}
 
                     user={user}
+
+                    isGuest={isGuest}
 
                     onRetry={() => {
                         if (messages.length > 0) {
@@ -872,6 +930,82 @@ function ChatPage() {
                             <p className="text-xs text-zinc-500 font-mono-tech uppercase tracking-wider animate-pulse">
                                 Clearing local credentials...
                             </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Auth Gate Modal */}
+            {showAuthModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                    <div className="bg-[var(--bg-secondary)]/90 border border-[var(--border-color)] rounded-3xl p-7 max-w-sm w-full shadow-2xl animate-fade-in-up text-[var(--text-primary)] relative overflow-hidden backdrop-blur-xl">
+                        {/* Glow Background inside modal */}
+                        <div className="absolute top-0 right-0 w-[150px] h-[150px] rounded-full bg-cyan-500/[0.05] blur-[30px] pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-[150px] h-[150px] rounded-full bg-indigo-500/[0.05] blur-[30px] pointer-events-none" />
+
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setShowAuthModal(false)}
+                            className="absolute right-4.5 top-4.5 p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white text-zinc-500 transition-all duration-300 hover:rotate-90 cursor-pointer border-0 bg-transparent outline-none"
+                        >
+                            <X size={15} />
+                        </button>
+
+                        <div className="flex flex-col items-center text-center mt-3">
+                            {/* Animated Pulsing Neon Orbit Icon (Live Spinning squircle-and-circle logo) */}
+                            <div className="relative w-24 h-24 mb-6 flex items-center justify-center">
+                                {/* Ambient glow behind */}
+                                <div className="absolute inset-0 rounded-full bg-cyan-500/10 blur-md animate-pulse" />
+                                
+                                {/* Outer squircle rotating live */}
+                                <div className="w-16 h-16 rounded-2xl bg-cyan-500/15 border border-cyan-500/50 flex items-center justify-center animate-[spin_8s_linear_infinite] shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                                    {/* Inner circle pulsing and counter-rotating */}
+                                    <div className="w-7 h-7 rounded-full border border-cyan-400 animate-pulse bg-cyan-500/5 flex items-center justify-center">
+                                        <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-ping" />
+                                        <div className="absolute w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h3 className="font-display font-bold text-lg tracking-wide uppercase text-[var(--text-primary)]">
+                                Unlock OpenOrbit
+                            </h3>
+                            <p className="text-[9px] font-mono-tech uppercase tracking-widest text-cyan-400 font-semibold mt-1">
+                                Secure Authentication Required
+                            </p>
+
+                            <p className="text-xs text-[var(--text-secondary)] leading-relaxed mt-4 mb-6">
+                                Sign up or log in to create chats, persist your conversation history, customize workspace settings, and access full AI capabilities.
+                            </p>
+
+                            <div className="w-full flex flex-col gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowAuthModal(false);
+                                        localStorage.removeItem("token");
+                                        localStorage.removeItem("is_guest");
+                                        setUser(null);
+                                        setIsGuest(false);
+                                        navigate("/login");
+                                    }}
+                                    className="w-full py-3 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-450 hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] active:scale-95 text-black font-semibold text-xs tracking-wider transition-all duration-300 uppercase cursor-pointer"
+                                >
+                                    Log In
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowAuthModal(false);
+                                        localStorage.removeItem("token");
+                                        localStorage.removeItem("is_guest");
+                                        setUser(null);
+                                        setIsGuest(false);
+                                        navigate("/signup");
+                                    }}
+                                    className="w-full py-3 px-4 rounded-xl border border-[var(--border-color)] bg-transparent hover:border-cyan-500/50 hover:bg-cyan-500/[0.02] hover:text-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.1)] active:scale-95 text-[var(--text-primary)] font-semibold text-xs tracking-wider transition-all duration-300 uppercase cursor-pointer"
+                                >
+                                    Create Free Account
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -10,9 +10,11 @@ import {
     Settings,
     LogOut
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function Sidebar({
     user,
+    isGuest,
     open,
     sessions,
     activeSession,
@@ -24,6 +26,7 @@ function Sidebar({
     onLogout,
     appName
 }) {
+    const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
     const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -234,17 +237,36 @@ function Sidebar({
 
             {/* Footer */}
             <div className="p-3 shrink-0 bg-[var(--bg-primary)]/40 border-t border-[var(--border-color)] flex items-center justify-between">
-                {open && user ? (
-                    <div className="w-full flex items-center justify-between">
-                        <div className="flex flex-col min-w-0 pr-1">
-                            <span className="text-[10px] text-[var(--text-primary)] font-semibold truncate font-mono-tech select-none">
-                                {user.name || user.email.split('@')[0]}
-                            </span>
-                            <span className="text-[8px] text-[var(--text-secondary)] truncate font-mono-tech select-none mt-0.5">
-                                {user.email}
-                            </span>
+                {user && !isGuest ? (
+                    open ? (
+                        <div className="w-full flex items-center justify-between">
+                            <div className="flex flex-col min-w-0 pr-1">
+                                <span className="text-[10px] text-[var(--text-primary)] font-semibold truncate font-mono-tech select-none">
+                                    {user.name || user.email.split('@')[0]}
+                                </span>
+                                <span className="text-[8px] text-[var(--text-secondary)] truncate font-mono-tech select-none mt-0.5">
+                                    {user.email}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={onOpenSettings}
+                                    className="p-1.5 rounded-lg hover:bg-white/[0.04] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+                                    title="Settings"
+                                >
+                                    <Settings size={14} />
+                                </button>
+                                <button
+                                    onClick={onLogout}
+                                    className="p-1.5 rounded-lg hover:bg-white/[0.04] text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer"
+                                    title="Log Out"
+                                >
+                                    <LogOut size={14} />
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1">
+                    ) : (
+                        <div className="w-full flex flex-col items-center gap-2">
                             <button
                                 onClick={onOpenSettings}
                                 className="p-1.5 rounded-lg hover:bg-white/[0.04] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
@@ -260,24 +282,47 @@ function Sidebar({
                                 <LogOut size={14} />
                             </button>
                         </div>
-                    </div>
+                    )
                 ) : (
-                    <div className="w-full flex flex-col items-center gap-2">
-                        <button
-                            onClick={onOpenSettings}
-                            className="p-1.5 rounded-lg hover:bg-white/[0.04] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-                            title="Settings"
-                        >
-                            <Settings size={14} />
-                        </button>
-                        <button
-                            onClick={onLogout}
-                            className="p-1.5 rounded-lg hover:bg-white/[0.04] text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer"
-                            title="Log Out"
-                        >
-                            <LogOut size={14} />
-                        </button>
-                    </div>
+                    // Guest user
+                    open ? (
+                        <div className="w-full flex flex-col gap-2 p-1">
+                            <button
+                                onClick={() => {
+                                    localStorage.removeItem("token");
+                                    localStorage.removeItem("is_guest");
+                                    navigate("/login");
+                                }}
+                                className="w-full py-2 px-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-xs tracking-wider transition-all duration-205 text-center uppercase cursor-pointer shadow-md"
+                            >
+                                Log In
+                            </button>
+                            <button
+                                onClick={() => {
+                                    localStorage.removeItem("token");
+                                    localStorage.removeItem("is_guest");
+                                    navigate("/signup");
+                                }}
+                                className="w-full py-2 px-3 rounded-xl border border-[var(--border-color)] bg-transparent hover:bg-white/[0.04] text-[var(--text-primary)] font-semibold text-xs tracking-wider transition-all duration-205 text-center uppercase cursor-pointer"
+                            >
+                                Sign Up
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="w-full flex flex-col items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    localStorage.removeItem("token");
+                                    localStorage.removeItem("is_guest");
+                                    navigate("/login");
+                                }}
+                                className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all duration-205 cursor-pointer"
+                                title="Log In"
+                            >
+                                <LogOut size={14} className="rotate-180" />
+                            </button>
+                        </div>
+                    )
                 )}
             </div>
         </aside>

@@ -25,6 +25,7 @@ function ChatWindow({
     onFeedback,
     onRetry,
     user,
+    isGuest,
     appName
 }) {
     const bottomRef = useRef(null);
@@ -249,7 +250,7 @@ function ChatWindow({
     })();
 
     const firstName = (() => {
-        if (!user?.email) return "Rutvik";
+        if (!user?.email || isGuest) return "Guest";
         const part = user.email.split("@")[0];
         if (part.toLowerCase().startsWith("rutvik")) {
             return "Rutvik";
