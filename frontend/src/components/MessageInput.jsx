@@ -29,10 +29,10 @@ function MessageInput({
     }
 
     return (
-        <div className="py-3 px-5 shrink-0 bg-[var(--bg-primary)]/60 backdrop-blur-md transition-colors duration-300">
+        <div className="py-2 px-3 md:py-3 md:px-5 shrink-0 bg-[var(--bg-primary)]/60 backdrop-blur-md transition-colors duration-300">
             <div className="max-w-4xl mx-auto animate-fade-in-up">
 
-                <div className="bg-[var(--bg-card)]/80 backdrop-blur-xl border border-[var(--border-color)] hover:border-zinc-500/20 rounded-3xl p-4.5 shadow-[0_20px_50px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.02)] transition-all duration-300 focus-within:border-cyan-500/30 focus-within:shadow-[0_0_50px_rgba(6,182,212,0.03),0_0_20px_rgba(6,182,212,0.01),inset_0_1px_0_rgba(255,255,255,0.01)]">
+                <div className="bg-[var(--bg-card)]/80 backdrop-blur-xl border border-[var(--border-color)] hover:border-zinc-500/20 rounded-3xl p-3.5 md:p-4.5 shadow-[0_20px_50px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.02)] transition-all duration-300 focus-within:border-cyan-500/30 focus-within:shadow-[0_0_50px_rgba(6,182,212,0.03),0_0_20px_rgba(6,182,212,0.01),inset_0_1px_0_rgba(255,255,255,0.01)]">
                     <textarea
                         rows={1}
                         value={message}
@@ -93,7 +93,7 @@ function MessageInput({
                                 title="Active Model"
                             >
                                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_4px_rgba(6,182,212,0.6)]" />
-                                <span>LLAMA-3.3</span>
+                                <span className="hidden min-[380px]:inline">LLAMA-3.3</span>
                                 <ChevronDown size={9} className="text-zinc-500 mt-0.5" />
                             </div>
 
