@@ -58,7 +58,7 @@ function ChatWindow({
 
     if (messages?.length > 0) {
         return (
-            <div className="flex-1 overflow-y-auto px-6 py-8 bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300">
+            <div className="flex-1 overflow-y-auto px-3.5 sm:px-6 py-4 sm:py-8 bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300">
                 <div className="max-w-5xl mx-auto space-y-6">
                     {messages.map((message, index) => {
                         const isLast = index === messages.length - 1;
@@ -156,7 +156,7 @@ function ChatWindow({
                                                     {appName || "OpenOrbit"}
                                                 </div>
                                             )}
-                                            <div className="text-[var(--text-primary)] leading-8 markdown-content [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h3]:text-xl [&_h3]:font-semibold [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_strong]:text-[var(--text-primary)] [&_strong]:font-bold [&_code]:text-cyan-500 [&_code]:bg-[var(--bg-secondary)] [&_code]:border [&_code]:border-[var(--border-color)] [&_code]:px-1 [&_code]:rounded [&_pre]:bg-[var(--bg-secondary)] [&_pre]:border [&_pre]:border-[var(--border-color)] [&_pre]:rounded-xl [&_pre]:p-4 [&_pre]:overflow-x-auto text-[15px]">
+                                            <div className="text-[var(--text-primary)] leading-relaxed md:leading-8 markdown-content [&_h1]:text-2xl md:[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-3 md:[&_h1]:mb-4 [&_h2]:text-xl md:[&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mb-2.5 md:[&_h2]:mb-3 [&_h3]:text-lg md:[&_h3]:text-xl [&_h3]:font-semibold [&_p]:mb-3.5 md:[&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 md:[&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-5 md:[&_ol]:pl-6 [&_li]:mb-1.5 md:[&_li]:mb-2 [&_strong]:text-[var(--text-primary)] [&_strong]:font-bold [&_code]:text-cyan-500 [&_code]:bg-[var(--bg-secondary)] [&_code]:border [&_code]:border-[var(--border-color)] [&_code]:px-1 [&_code]:rounded [&_pre]:bg-[var(--bg-secondary)] [&_pre]:border [&_pre]:border-[var(--border-color)] [&_pre]:rounded-xl [&_pre]:p-3 md:[&_pre]:p-4 [&_pre]:overflow-x-auto text-[14px] md:text-[15px]">
                                                 {isEmptyResponse ? (
                                                     <div className="flex items-center gap-2 text-zinc-500 italic text-sm py-1">
                                                         {message.status ? (
@@ -268,7 +268,7 @@ function ChatWindow({
     }
 
     return (
-        <div className="flex-1 flex flex-col items-center justify-center px-6 bg-[var(--bg-primary)] h-full relative overflow-hidden bg-cyber-grid transition-colors duration-300">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 bg-[var(--bg-primary)] h-full relative overflow-hidden bg-cyber-grid transition-colors duration-300">
             {/* Ambient Background Glows */}
             <div className="absolute inset-0 bg-radial-glow pointer-events-none" />
             <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-cyan-500/[0.03] blur-[120px] pointer-events-none" />
@@ -276,7 +276,7 @@ function ChatWindow({
 
             <div className="max-w-2xl w-full flex flex-col items-center select-none relative z-10">
                 {/* Greeting Header */}
-                <div className="text-center mb-8 flex flex-col items-center">
+                <div className="text-center mb-5 md:mb-8 flex flex-col items-center">
                     <div className="font-display text-2xl md:text-3xl font-light tracking-wide text-[var(--text-primary)] select-none mb-1.5 flex items-center justify-center gap-2.5">
                         <span>{greetingObj.emoji}</span>
                         <span className="bg-gradient-to-r from-[var(--text-primary)] to-[var(--text-secondary)] bg-clip-text text-transparent">

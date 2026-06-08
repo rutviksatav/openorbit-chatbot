@@ -354,7 +354,7 @@ function ChatPage() {
         useState(true);
 
     const [sidebarOpen, setSidebarOpen] =
-        useState(true);
+        useState(() => window.innerWidth >= 768);
 
 
     useEffect(() => {
@@ -717,7 +717,7 @@ function ChatPage() {
 
             {showSettingsModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-3xl p-6 max-w-sm w-full shadow-2xl animate-fade-in-up text-[var(--text-primary)]">
+                    <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl animate-fade-in-up text-[var(--text-primary)]">
                         {/* Header */}
                         <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3.5 mb-5">
                             <h3 className="font-display font-semibold text-sm tracking-wide uppercase flex items-center gap-2">
@@ -865,7 +865,7 @@ function ChatPage() {
             {/* Premium Logout Confirmation Modal */}
             {showLogoutConfirmModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-3xl p-6 max-w-sm w-full shadow-2xl animate-fade-in-up text-[var(--text-primary)]">
+                    <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl animate-fade-in-up text-[var(--text-primary)]">
                         {/* Title and Icon */}
                         <div className="flex items-center gap-3 border-b border-[var(--border-color)] pb-3.5 mb-4">
                             <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
@@ -938,7 +938,7 @@ function ChatPage() {
             {/* Auth Gate Modal */}
             {showAuthModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-[var(--bg-secondary)]/90 border border-[var(--border-color)] rounded-3xl p-7 max-w-sm w-full shadow-2xl animate-fade-in-up text-[var(--text-primary)] relative overflow-hidden backdrop-blur-xl">
+                    <div className="bg-[var(--bg-secondary)]/90 border border-[var(--border-color)] rounded-3xl p-5 sm:p-7 max-w-sm w-full shadow-2xl animate-fade-in-up text-[var(--text-primary)] relative overflow-hidden backdrop-blur-xl">
                         {/* Glow Background inside modal */}
                         <div className="absolute top-0 right-0 w-[150px] h-[150px] rounded-full bg-cyan-500/[0.05] blur-[30px] pointer-events-none" />
                         <div className="absolute bottom-0 left-0 w-[150px] h-[150px] rounded-full bg-indigo-500/[0.05] blur-[30px] pointer-events-none" />

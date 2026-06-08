@@ -39,7 +39,7 @@ function Header({
                 </button>
 
                 <span
-                    className="text-sm font-display text-zinc-100 font-medium max-w-[280px] truncate select-none tracking-normal ml-1"
+                    className="text-sm font-display text-zinc-100 font-medium max-w-[150px] sm:max-w-[280px] truncate select-none tracking-normal ml-1"
                     title={activeSessionTitle || "New Chat"}
                 >
                     {activeSessionTitle || "New Chat"}
