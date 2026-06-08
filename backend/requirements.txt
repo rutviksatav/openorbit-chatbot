@@ -12,5 +12,3 @@ sse-starlette
 duckduckgo-search
 asyncpg
 ollama
-
-

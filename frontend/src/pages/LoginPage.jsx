@@ -20,7 +20,7 @@ function LoginPage() {
             setError("");
             const data = await login(email, password);
             localStorage.setItem("token", data.access_token);
-            navigate("/chat");
+            navigate("/");
         } catch (err) {
             setError(err.message);
         } finally {

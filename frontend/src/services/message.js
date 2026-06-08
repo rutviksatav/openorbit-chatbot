@@ -147,4 +147,3 @@ export async function submitFeedback(sessionId, messageId, feedback) {
     }
     return response.json();
 }
-

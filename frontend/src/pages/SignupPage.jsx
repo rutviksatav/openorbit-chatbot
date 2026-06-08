@@ -45,7 +45,7 @@ function SignupPage() {
             localStorage.setItem("token", data.access_token);
 
             // Step 4: Go straight to chat
-            navigate("/chat");
+            navigate("/");
 
         } catch (err) {
             setError(err.message);
@@ -176,7 +176,7 @@ function SignupPage() {
                     <p className="text-center text-xs" style={{ color: "rgba(100,130,150,0.6)" }}>
                         Already have an account?{" "}
                         <Link
-                            to="/"
+                            to="/login"
                             className="font-semibold transition-colors"
                             style={{ color: "#00b8a0" }}
                         >
