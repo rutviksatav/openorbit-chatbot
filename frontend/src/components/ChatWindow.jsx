@@ -10,13 +10,6 @@ import {
     X,
     CheckSquare,
     RefreshCw,
-    Code,
-    Compass,
-    FileText,
-    Briefcase,
-    Cpu,
-    Palette,
-    ArrowUpRight,
     ChevronDown,
     Paperclip,
     Mic,
@@ -31,7 +24,10 @@ function ChatWindow({
     onRegenerate,
     onFeedback,
     onRetry,
-    user
+    user,
+    appName,
+    mode,
+    setMode
 }) {
     const bottomRef = useRef(null);
     const [editingMessageId, setEditingMessageId] = useState(null);
@@ -56,23 +52,10 @@ function ChatWindow({
         try {
             const date = new Date(isoString);
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        } catch (e) {
+        } catch {
             return "";
         }
     }
-
-    const suggestedPrompts = [
-        {
-            title: "Code",
-            description: "Write, debug, and explain code.",
-            icon: <Code size={18} className="text-cyan-400" />
-        },
-        {
-            title: "Research",
-            description: "Get answers, compare topics, and explore.",
-            icon: <Compass size={18} className="text-cyan-400" />
-        }
-    ];
 
     if (messages?.length > 0) {
         return (
@@ -171,16 +154,21 @@ function ChatWindow({
                                         <div className="flex-1 max-w-5xl">
                                             {showAvatar && (
                                                 <div className="text-sm text-[var(--text-secondary)] mb-1 font-semibold select-none font-display">
-                                                    OpenOrbit
+                                                    {appName || "OpenOrbit"}
                                                 </div>
                                             )}
                                             <div className="text-[var(--text-primary)] leading-8 markdown-content [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h3]:text-xl [&_h3]:font-semibold [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_strong]:text-[var(--text-primary)] [&_strong]:font-bold [&_code]:text-cyan-500 [&_code]:bg-[var(--bg-secondary)] [&_code]:border [&_code]:border-[var(--border-color)] [&_code]:px-1 [&_code]:rounded [&_pre]:bg-[var(--bg-secondary)] [&_pre]:border [&_pre]:border-[var(--border-color)] [&_pre]:rounded-xl [&_pre]:p-4 [&_pre]:overflow-x-auto text-[15px]">
                                                 {isEmptyResponse ? (
                                                     <div className="flex items-center gap-2 text-zinc-500 italic text-sm py-1">
-                                                        {sending && isLast ? (
+                                                        {message.status ? (
+                                                            <span className="flex items-center gap-2 text-cyan-400 italic text-xs font-mono-tech select-none animate-pulse">
+                                                                <RefreshCw size={11} className="animate-spin text-cyan-400" />
+                                                                {message.status}
+                                                            </span>
+                                                        ) : sending && isLast ? (
                                                             <>
                                                                 <RefreshCw size={13} className="animate-spin text-cyan-500" />
-                                                                OpenOrbit is typing...
+                                                                {appName || "OpenOrbit"} is typing...
                                                             </>
                                                         ) : (
                                                             <>
@@ -202,6 +190,30 @@ function ChatWindow({
                                                     </ReactMarkdown>
                                                 )}
                                             </div>
+
+                                            {/* Source Cards */}
+                                            {message.sources && message.sources.length > 0 && (
+                                                <div className="mt-3.5 mb-2 border-t border-[var(--border-color)]/40 pt-3.5 animate-fade-in-up">
+                                                    <div className="font-mono-tech text-[9px] uppercase tracking-wider text-zinc-500 mb-2 select-none">
+                                                        Sources
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {message.sources.map((src, sIdx) => (
+                                                            <a
+                                                                key={sIdx}
+                                                                href={src.url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[11px] text-cyan-400 hover:text-cyan-300 hover:bg-white/[0.02] hover:border-cyan-500/20 transition duration-150 select-none shadow-sm cursor-pointer"
+                                                            >
+                                                                <span className="text-[10px] text-zinc-500">🔗</span>
+                                                                <span className="font-medium truncate max-w-[150px]">{src.title || src.domain}</span>
+                                                                <span className="text-[9px] font-mono-tech text-zinc-500 uppercase tracking-tight ml-1">{src.domain}</span>
+                                                            </a>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                             {!isEmptyResponse && (
                                                 (sending && isLast) ? null : (
                                                     <div className="flex items-center gap-3.5 mt-2.5 text-[11px] text-zinc-500">
@@ -270,18 +282,12 @@ function ChatWindow({
         return name.charAt(0).toUpperCase() + name.slice(1);
     })();
 
-    const quickActions = [
-        { label: "Build SaaS", prompt: "Help me brainstorm and plan a SaaS product from scratch." },
-        { label: "Research Topic", prompt: "Explain the pros and cons of relational vs non-relational databases." },
-        { label: "Debug Code", prompt: "Analyze this code snippet for performance bottlenecks and bugs." },
-        { label: "Design System", prompt: "Design a clean feedback loop for a modern messaging interface." }
-    ];
 
     function handleWelcomeSend() {
         if (!welcomeMessage.trim()) return;
         const msg = welcomeMessage;
         setWelcomeMessage("");
-        onSendMessage(msg);
+        onSendMessage(msg, mode);
     }
 
     return (
@@ -294,12 +300,41 @@ function ChatWindow({
             <div className="max-w-2xl w-full flex flex-col items-center select-none relative z-10">
                 {/* Greeting Header */}
                 <div className="text-center mb-8 flex flex-col items-center">
-                    <div className="font-display text-2xl md:text-3xl font-light tracking-wide text-[var(--text-primary)] select-none bg-gradient-to-r from-[var(--text-primary)] to-[var(--text-secondary)] bg-clip-text text-transparent mb-1.5">
-                        {greetingObj.emoji} {greetingObj.text}, {firstName}
+                    <div className="font-display text-2xl md:text-3xl font-light tracking-wide text-[var(--text-primary)] select-none mb-1.5 flex items-center justify-center gap-2.5">
+                        <span>{greetingObj.emoji}</span>
+                        <span className="bg-gradient-to-r from-[var(--text-primary)] to-[var(--text-secondary)] bg-clip-text text-transparent">
+                            {greetingObj.text}, {firstName}
+                        </span>
                     </div>
                     <h1 className="font-mono-tech text-[10px] tracking-widest text-zinc-500 font-medium select-none uppercase">
                         What can I help with today?
                     </h1>
+                </div>
+
+                {/* Mode Selector Toggle */}
+                <div className="flex items-center gap-3 mb-4.5 pl-2.5">
+                    <button
+                        type="button"
+                        onClick={() => setMode("chat")}
+                        className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-display font-medium tracking-wide uppercase transition cursor-pointer select-none border border-transparent ${
+                            mode === "chat"
+                                ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-400 font-semibold"
+                                : "text-zinc-500 hover:text-zinc-350 hover:bg-white/[0.02]"
+                        }`}
+                    >
+                        💬 Chat
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setMode("research")}
+                        className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-display font-medium tracking-wide uppercase transition cursor-pointer select-none border border-transparent ${
+                            mode === "research"
+                                ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-400 font-semibold shadow-sm"
+                                : "text-zinc-500 hover:text-zinc-350 hover:bg-white/[0.02]"
+                        }`}
+                    >
+                        🌐 Research
+                    </button>
                 </div>
 
                 {/* Hero Input Box */}

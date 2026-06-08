@@ -121,6 +121,16 @@ class Message(Base):
         nullable=True
     )
 
+    sources = Column(
+        Text,
+        nullable=True
+    )
+
+    mode = Column(
+        String,
+        nullable=True
+    )
+
     session = relationship(
         "ChatSession",
         back_populates="messages"

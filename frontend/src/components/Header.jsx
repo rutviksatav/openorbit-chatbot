@@ -1,4 +1,4 @@
-import { PanelLeft, ChevronDown } from "lucide-react";
+import { PanelLeft } from "lucide-react";
 
 function Header({
     onToggleSidebar,

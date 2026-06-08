@@ -7,7 +7,8 @@ import {
     X,
     ChevronDown,
     ChevronRight,
-    Settings
+    Settings,
+    LogOut
 } from "lucide-react";
 
 function Sidebar({
@@ -19,7 +20,9 @@ function Sidebar({
     onNewChat,
     onDeleteChat,
     onToggleSidebar,
-    onOpenSettings
+    onOpenSettings,
+    onLogout,
+    appName
 }) {
     const [searchQuery, setSearchQuery] = useState("");
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -120,16 +123,19 @@ function Sidebar({
         >
             {/* Logo */}
             <div className="px-5 py-5 shrink-0 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <button
+                    onClick={onNewChat}
+                    className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity text-left bg-transparent border-0 p-0 outline-none"
+                >
                     <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/55 flex items-center justify-center shrink-0">
                         <div className="w-3.5 h-3.5 rounded-full border border-cyan-400" />
                     </div>
                     {open && (
                         <span className="font-display text-sm font-semibold text-[var(--text-primary)] tracking-widest select-none uppercase">
-                            OpenOrbit
+                            {appName || "OpenOrbit"}
                         </span>
                     )}
-                </div>
+                </button>
                 {/* Mobile Drawer Close Button */}
                 {open && onToggleSidebar && (
                     <button
@@ -238,6 +244,25 @@ function Sidebar({
                                 {user.email}
                             </span>
                         </div>
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={onOpenSettings}
+                                className="p-1.5 rounded-lg hover:bg-white/[0.04] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+                                title="Settings"
+                            >
+                                <Settings size={14} />
+                            </button>
+                            <button
+                                onClick={onLogout}
+                                className="p-1.5 rounded-lg hover:bg-white/[0.04] text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer"
+                                title="Log Out"
+                            >
+                                <LogOut size={14} />
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="w-full flex flex-col items-center gap-2">
                         <button
                             onClick={onOpenSettings}
                             className="p-1.5 rounded-lg hover:bg-white/[0.04] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
@@ -245,15 +270,12 @@ function Sidebar({
                         >
                             <Settings size={14} />
                         </button>
-                    </div>
-                ) : (
-                    <div className="w-full flex justify-center">
                         <button
-                            onClick={onOpenSettings}
-                            className="p-1.5 rounded-lg hover:bg-white/[0.04] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-                            title="Settings"
+                            onClick={onLogout}
+                            className="p-1.5 rounded-lg hover:bg-white/[0.04] text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer"
+                            title="Log Out"
                         >
-                            <Settings size={14} />
+                            <LogOut size={14} />
                         </button>
                     </div>
                 )}

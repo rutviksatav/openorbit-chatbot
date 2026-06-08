@@ -8,9 +8,7 @@ from sqlalchemy.orm import (
     declarative_base
 )
 
-DATABASE_URL = (
-    "sqlite+aiosqlite:///./chat.db"
-)
+from app.core.config import DATABASE_URL
 
 engine = create_async_engine(
     DATABASE_URL,
