@@ -47,5 +47,6 @@ cors_origins_raw = os.getenv(
     "CORS_ORIGINS",
     "http://localhost:5173,http://127.0.0.1:5173"
 )
-CORS_ORIGINS = [origin.strip() for origin in cors_origins_raw.split(",") if origin.strip()]
+CORS_ORIGINS = [origin.strip().rstrip("/") for origin in cors_origins_raw.split(",") if origin.strip()]
+
 
