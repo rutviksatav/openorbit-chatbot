@@ -1,4 +1,4 @@
-import { apiFetch }
+import { apiFetch, API_URL }
     from "./api";
 
 
@@ -29,7 +29,9 @@ export async function sendMessage(
 
     sessionId,
 
-    content
+    content,
+
+    mode = "chat"
 
 ) {
 
@@ -44,7 +46,9 @@ export async function sendMessage(
 
                 body: JSON.stringify({
 
-                    content
+                    content,
+
+                    mode
                 })
             }
         );
@@ -76,7 +80,8 @@ export function streamMessage(
     const eventSource =
         new EventSource(
 
-            `http://127.0.0.1:8000/sessions/${sessionId}/stream?token=${token}`
+            `${API_URL}/sessions/${sessionId}/stream?token=${token}`,
+            { withCredentials: true }
 
         );
 

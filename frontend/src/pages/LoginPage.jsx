@@ -12,6 +12,8 @@ function LoginPage() {
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
+    const appName = localStorage.getItem("openorbit_app_name") || "OpenOrbit";
+
     async function handleLogin() {
         try {
             setLoading(true);
@@ -83,7 +85,7 @@ function LoginPage() {
                                 className="text-xl font-bold tracking-widest uppercase"
                                 style={{ color: "#f0f4f8", letterSpacing: "0.08em" }}
                             >
-                                OpenOrbit
+                                {appName}
                             </span>
                         </div>
 
@@ -135,7 +137,6 @@ function LoginPage() {
                         {loading ? "Signing In..." : "Sign In"}
                     </PrimaryButton>
 
-                    {/* ✅ Signup link — NEW */}
                     <p className="text-center text-xs" style={{ color: "rgba(100,130,150,0.6)" }}>
                         Don't have an account?{" "}
                         <Link

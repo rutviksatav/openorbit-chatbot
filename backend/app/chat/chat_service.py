@@ -1,3 +1,5 @@
+import asyncio
+import json
 from fastapi import HTTPException
 
 from app.repositories.message_repository import (
@@ -15,6 +17,9 @@ from app.chat.title_generator import (
 from app.services.provider_factory import (
     get_llm_provider
 )
+
+from app.agents.intent_router import IntentRouter
+from app.agents.research_agent import ResearchAgent
 
 
 class ChatService:
@@ -65,11 +70,12 @@ class ChatService:
 
 
     async def send_message(
-    self,
-    session_id: int,
-    user_id: int,
-    content: str
-):
+        self,
+        session_id: int,
+        user_id: int,
+        content: str,
+        mode: str = "chat"
+    ):
 
         chat_session = (
             await self.session_repository
@@ -102,7 +108,8 @@ class ChatService:
             .create_message(
                 session_id=session_id,
                 role="user",
-                content=content
+                content=content,
+                mode=mode
             )
         )
 
@@ -136,35 +143,75 @@ class ChatService:
         self,
         session_id: int
     ):
-
-        conversation = (
-            await self.build_conversation_history(
-                session_id
-            )
-        )
-
-        full_response = ""
-
-        try:
-            async for chunk in (
-                self.provider.stream_response(
-                    conversation
-                )
-            ):
-
-                full_response += chunk
-
-                yield chunk
-        finally:
-            if full_response:
-                await (
-                    self.message_repository
-                    .create_message(
+        # Fetch the message history to check user's requested mode and query
+        db_messages = await self.message_repository.get_messages_by_session(session_id)
+        
+        last_user_message = None
+        for msg in reversed(db_messages):
+            if msg.role == "user":
+                last_user_message = msg
+                break
+                
+        mode = "chat"
+        user_query = ""
+        if last_user_message:
+            mode = last_user_message.mode or "chat"
+            user_query = last_user_message.content or ""
+            
+        intent_router = IntentRouter()
+        should_run_search = mode == "research" or (mode == "chat" and await intent_router.should_search(user_query))
+        
+        if should_run_search:
+            # Research Mode flow
+            sources_out = []
+            
+            # Stream status prefixes sequentially
+            yield "__status__:🌐 Searching the web..."
+            await asyncio.sleep(0.5)
+            yield "__status__:📄 Reading sources..."
+            await asyncio.sleep(0.5)
+            yield "__status__:🧠 Generating answer..."
+            await asyncio.sleep(0.3)
+            
+            agent = ResearchAgent()
+            full_response = ""
+            try:
+                async for chunk in agent.generate_stream(user_query, session_id, sources_out):
+                    full_response += chunk
+                    yield chunk
+            finally:
+                if full_response:
+                    await self.message_repository.create_message(
                         session_id=session_id,
                         role="assistant",
-                        content=full_response
+                        content=full_response,
+                        sources=json.dumps(sources_out) if sources_out else None,
+                        mode=mode
                     )
-                )
+        else:
+            # Normal Chat flow
+            conversation = await self.build_conversation_history(session_id)
+            
+            from datetime import datetime
+            current_time_str = datetime.now().strftime("%A, %B %d, %Y, %I:%M %p")
+            conversation.insert(0, {
+                "role": "system",
+                "content": f"You are OpenOrbit, a helpful AI assistant. Current Date and Time: {current_time_str}"
+            })
+            
+            full_response = ""
+            try:
+                async for chunk in self.provider.stream_response(conversation):
+                    full_response += chunk
+                    yield chunk
+            finally:
+                if full_response:
+                    await self.message_repository.create_message(
+                        session_id=session_id,
+                        role="assistant",
+                        content=full_response,
+                        mode=mode
+                    )
 
     async def get_session_details(
     self,

@@ -4,7 +4,10 @@ sqlalchemy
 aiosqlite
 python-jose
 passlib[bcrypt]
+bcrypt<5
 python-multipart
 groq
 python-dotenv
 sse-starlette
+duckduckgo-search
+asyncpg

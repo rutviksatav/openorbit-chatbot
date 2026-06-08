@@ -12,8 +12,13 @@ import {
     Moon,
     Trash2,
     Save,
-    Settings
+    Settings,
+    LogOut
 } from "lucide-react";
+
+import {
+    useNavigate
+} from "react-router-dom";
 
 import {
 
@@ -61,6 +66,7 @@ import {
 
 
 function ChatPage() {
+    const navigate = useNavigate();
 
     const [user, setUser] =
         useState(null);
@@ -74,6 +80,8 @@ function ChatPage() {
     const [messages, setMessages] =
         useState([]);
 
+    const [mode, setMode] = useState("chat");
+
     const [sending, setSending] = useState(false);
     const eventSourceRef = useRef(null);
 
@@ -83,13 +91,13 @@ function ChatPage() {
     });
     const [editName, setEditName] = useState("");
     const [editEmail, setEditEmail] = useState("");
+    const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [appName, setAppName] = useState(() => {
+        return localStorage.getItem("openorbit_app_name") || "OpenOrbit";
+    });
+    const [editAppName, setEditAppName] = useState("");
 
-    useEffect(() => {
-        if (showSettingsModal && user) {
-            setEditName(user.name || user.email.split('@')[0]);
-            setEditEmail(user.email || "");
-        }
-    }, [showSettingsModal, user]);
 
     useEffect(() => {
         if (theme === "light") {
@@ -136,10 +144,18 @@ function ChatPage() {
                     const idx = updated.findIndex(m => m.id === assistantId);
                     if (idx === -1) return prev;
 
-                    updated[idx] = {
-                        ...updated[idx],
-                        content: updated[idx].content + chunk
-                    };
+                    if (chunk.startsWith("__status__:")) {
+                        updated[idx] = {
+                            ...updated[idx],
+                            status: chunk.substring(11)
+                        };
+                    } else {
+                        updated[idx] = {
+                            ...updated[idx],
+                            status: null,
+                            content: updated[idx].content + chunk
+                        };
+                    }
                     return updated;
                 });
             }
@@ -175,7 +191,7 @@ function ChatPage() {
     }
 
     // Callback when sending a new message
-    async function handleSendMessage(content) {
+    async function handleSendMessage(content, mode = "chat") {
 
         if (sending) {
             return;
@@ -207,7 +223,8 @@ function ChatPage() {
                 {
                     id: `user-${Date.now()}`,
                     role: "user",
-                    content
+                    content,
+                    mode
                 },
                 {
                     id: assistantId,
@@ -218,7 +235,8 @@ function ChatPage() {
 
             await sendMessage(
                 session.id,
-                content
+                content,
+                mode
             );
 
             startStreaming(
@@ -343,18 +361,8 @@ function ChatPage() {
                     sessionData
                 );
 
-                if (
-
-                    sessionData.length > 0
-
-                ) {
-
-                    setActiveSession(
-
-                        sessionData[0]
-
-                    );
-                }
+                // Start on new chat welcome page immediately on load
+                setActiveSession(null);
 
             }
 
@@ -401,6 +409,11 @@ function ChatPage() {
                 setMessages(
                     messagesData
                 );
+
+                const lastUserMsg = [...messagesData].reverse().find(m => m.role === "user");
+                if (lastUserMsg && lastUserMsg.mode) {
+                    setMode(lastUserMsg.mode);
+                }
 
             }
 
@@ -505,6 +518,31 @@ function ChatPage() {
         }
     }
 
+    function handleOpenSettings() {
+        if (user) {
+            setEditName(user.name || user.email.split('@')[0]);
+            setEditEmail(user.email || "");
+            setEditAppName(appName);
+        }
+        setShowSettingsModal(true);
+    }
+
+    function handleLogoutTrigger() {
+        setShowLogoutConfirmModal(true);
+    }
+
+    function confirmLogout() {
+        setShowLogoutConfirmModal(false);
+        setShowSettingsModal(false);
+        setIsLoggingOut(true);
+        setTimeout(() => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("openorbit_profile_name");
+            localStorage.removeItem("openorbit_profile_email");
+            navigate("/");
+        }, 1200);
+    }
+
 
     if (loading) {
 
@@ -522,7 +560,7 @@ function ChatPage() {
                 "
             >
 
-                Loading OpenOrbit...
+                Loading {appName}...
 
             </div>
         );
@@ -555,7 +593,9 @@ function ChatPage() {
                 onNewChat={handleNewChat}
                 onDeleteChat={handleDeleteChat}
                 onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-                onOpenSettings={() => setShowSettingsModal(true)}
+                onOpenSettings={handleOpenSettings}
+                onLogout={handleLogoutTrigger}
+                appName={appName}
             />
 
             <div
@@ -605,6 +645,9 @@ function ChatPage() {
                             }
                         }
                     }}
+                    appName={appName}
+                    mode={mode}
+                    setMode={setMode}
 
                 />
 
@@ -614,6 +657,8 @@ function ChatPage() {
                         sending={sending}
                         onSendMessage={handleSendMessage}
                         onStopMessage={handleStopMessage}
+                        mode={mode}
+                        setMode={setMode}
                     />
                 )}
 
@@ -638,6 +683,22 @@ function ChatPage() {
 
                         {/* Profile Settings */}
                         <div className="space-y-4">
+                            <div>
+                                <label className="block font-mono-tech text-[9px] uppercase tracking-wider text-zinc-500 mb-1.5 select-none">
+                                    Application Name
+                                </label>
+                                <div className="relative">
+                                    <Settings size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                                    <input
+                                        type="text"
+                                        value={editAppName}
+                                        onChange={(e) => setEditAppName(e.target.value)}
+                                        className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl pl-8.5 pr-3 py-2 text-xs text-[var(--text-primary)] outline-none focus:border-cyan-500/35 transition"
+                                        placeholder="OpenOrbit"
+                                    />
+                                </div>
+                            </div>
+
                             <div>
                                 <label className="block font-mono-tech text-[9px] uppercase tracking-wider text-zinc-500 mb-1.5 select-none">
                                     Display Name
@@ -706,6 +767,17 @@ function ChatPage() {
                                     <span>DELETE ALL CHATS</span>
                                 </button>
                             </div>
+
+                            {/* Log Out */}
+                            <div className="pt-2">
+                                <button
+                                    onClick={handleLogoutTrigger}
+                                    className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-zinc-500/20 bg-zinc-500/[0.04] hover:bg-zinc-500/10 text-zinc-400 hover:text-zinc-300 text-xs font-semibold tracking-wide transition cursor-pointer"
+                                >
+                                    <LogOut size={13} />
+                                    <span>LOG OUT</span>
+                                </button>
+                            </div>
                         </div>
 
                         {/* Save Actions */}
@@ -720,6 +792,8 @@ function ChatPage() {
                                 onClick={() => {
                                     localStorage.setItem("openorbit_profile_name", editName);
                                     localStorage.setItem("openorbit_profile_email", editEmail);
+                                    localStorage.setItem("openorbit_app_name", editAppName);
+                                    setAppName(editAppName);
                                     setUser(prev => ({
                                         ...prev,
                                         name: editName,
@@ -732,6 +806,79 @@ function ChatPage() {
                                 <Save size={13} />
                                 Save Settings
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Premium Logout Confirmation Modal */}
+            {showLogoutConfirmModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-3xl p-6 max-w-sm w-full shadow-2xl animate-fade-in-up text-[var(--text-primary)]">
+                        {/* Title and Icon */}
+                        <div className="flex items-center gap-3 border-b border-[var(--border-color)] pb-3.5 mb-4">
+                            <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+                                <LogOut size={18} />
+                            </div>
+                            <div>
+                                <h3 className="font-display font-semibold text-sm tracking-wide uppercase">
+                                    Confirm Log Out
+                                </h3>
+                                <p className="text-[9px] font-mono-tech uppercase tracking-wider text-zinc-500 mt-0.5">
+                                    Secure Session Termination
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        <div className="space-y-3">
+                            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                Are you sure you want to log out of <strong>{appName}</strong>?
+                            </p>
+                            <p className="text-[10px] text-zinc-500 leading-normal">
+                                Your active chat sessions, custom settings, and preferences will be securely saved, and your local authorization credentials will be deleted.
+                            </p>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="mt-6 pt-4 border-t border-[var(--border-color)] flex items-center justify-end gap-2.5">
+                            <button
+                                onClick={() => setShowLogoutConfirmModal(false)}
+                                className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-[var(--text-primary)] hover:bg-white/[0.02] border border-transparent hover:border-[var(--border-color)] transition cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmLogout}
+                                className="px-5 py-2 rounded-xl bg-red-500 hover:bg-red-400 text-black font-semibold text-xs tracking-wide transition cursor-pointer flex items-center gap-1.5 shadow-lg shadow-red-500/10"
+                            >
+                                <LogOut size={13} />
+                                Confirm Log Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Immersive Logout Transition Overlay */}
+            {isLoggingOut && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[9999] flex flex-col items-center justify-center animate-fade-in">
+                    <div className="flex flex-col items-center gap-6 text-center max-w-sm px-4">
+                        {/* Branding Icon Container with Pulse */}
+                        <div className="relative">
+                            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center animate-pulse">
+                                <div className="w-7 h-7 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+                            </div>
+                            <div className="absolute -inset-1 rounded-2xl bg-cyan-400/20 blur-sm opacity-50 animate-pulse pointer-events-none" />
+                        </div>
+
+                        <div className="space-y-2">
+                            <h2 className="text-base font-display font-semibold text-zinc-150 uppercase tracking-widest select-none">
+                                Securing Workspace
+                            </h2>
+                            <p className="text-xs text-zinc-500 font-mono-tech uppercase tracking-wider animate-pulse">
+                                Clearing local credentials...
+                            </p>
                         </div>
                     </div>
                 </div>

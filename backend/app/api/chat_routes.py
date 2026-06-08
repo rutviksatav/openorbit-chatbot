@@ -1,3 +1,4 @@
+import json
 from fastapi import (
     APIRouter,
     Depends,
@@ -147,7 +148,9 @@ async def create_message(
 
             user_id=current_user.id,
 
-            content=payload.content
+            content=payload.content,
+
+            mode=payload.mode
         )
     )
 
@@ -206,7 +209,11 @@ async def get_messages(
 
             "created_at": message.created_at.isoformat() if message.created_at else None,
 
-            "feedback": message.feedback
+            "feedback": message.feedback,
+
+            "sources": json.loads(message.sources) if message.sources else [],
+
+            "mode": message.mode
         }
 
         for message in messages

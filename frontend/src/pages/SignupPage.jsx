@@ -12,6 +12,7 @@ function SignupPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const navigate = useNavigate();
+    const appName = localStorage.getItem("openorbit_app_name") || "OpenOrbit";
 
     async function handleSignup() {
         setError("");
@@ -110,7 +111,7 @@ function SignupPage() {
                                 className="text-xl font-bold tracking-widest uppercase"
                                 style={{ color: "#f0f4f8", letterSpacing: "0.08em" }}
                             >
-                                OpenOrbit
+                                {appName}
                             </span>
                         </div>
 

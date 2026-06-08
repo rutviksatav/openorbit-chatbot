@@ -17,7 +17,9 @@ class MessageRepository:
         self,
         session_id: int,
         role: str,
-        content: str
+        content: str,
+        sources: str | None = None,
+        mode: str | None = None
     ):
 
         async with AsyncSessionLocal() as session:
@@ -28,7 +30,11 @@ class MessageRepository:
 
                 role=role,
 
-                content=content
+                content=content,
+
+                sources=sources,
+
+                mode=mode
             )
 
             session.add(message)
