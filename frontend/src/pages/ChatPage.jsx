@@ -80,7 +80,7 @@ function ChatPage() {
     const [messages, setMessages] =
         useState([]);
 
-    const [mode, setMode] = useState("chat");
+
 
     const [sending, setSending] = useState(false);
     const eventSourceRef = useRef(null);
@@ -191,7 +191,7 @@ function ChatPage() {
     }
 
     // Callback when sending a new message
-    async function handleSendMessage(content, mode = "chat") {
+    async function handleSendMessage(content) {
 
         if (sending) {
             return;
@@ -224,7 +224,7 @@ function ChatPage() {
                     id: `user-${Date.now()}`,
                     role: "user",
                     content,
-                    mode
+                    mode: "chat"
                 },
                 {
                     id: assistantId,
@@ -236,7 +236,7 @@ function ChatPage() {
             await sendMessage(
                 session.id,
                 content,
-                mode
+                "chat"
             );
 
             startStreaming(
@@ -410,10 +410,7 @@ function ChatPage() {
                     messagesData
                 );
 
-                const lastUserMsg = [...messagesData].reverse().find(m => m.role === "user");
-                if (lastUserMsg && lastUserMsg.mode) {
-                    setMode(lastUserMsg.mode);
-                }
+
 
             }
 
@@ -646,8 +643,6 @@ function ChatPage() {
                         }
                     }}
                     appName={appName}
-                    mode={mode}
-                    setMode={setMode}
 
                 />
 
@@ -657,8 +652,6 @@ function ChatPage() {
                         sending={sending}
                         onSendMessage={handleSendMessage}
                         onStopMessage={handleStopMessage}
-                        mode={mode}
-                        setMode={setMode}
                     />
                 )}
 
