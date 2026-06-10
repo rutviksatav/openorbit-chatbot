@@ -35,6 +35,8 @@ from app.chat.chat_service import (
     ChatService
 )
 
+from app.cache.memory_cache import cache
+
 router = APIRouter()
 
 repository = SessionRepository()
@@ -61,6 +63,9 @@ async def create_session(
         title=payload.title or "New Chat"
     )
 
+    # Invalidate session list cache for this user
+    await cache.delete(f"user:{current_user.id}:sessions")
+
     return {
 
         "id": session.id,
@@ -78,11 +83,17 @@ async def get_sessions(
     )
 ):
 
+    cache_key = f"user:{current_user.id}:sessions"
+    cached_sessions = await cache.get(cache_key)
+
+    if cached_sessions is not None:
+        return cached_sessions
+
     sessions = await repository.get_sessions_by_user(
         current_user.id
     )
 
-    return [
+    sessions_list = [
 
         {
             "id": s.id,
@@ -92,6 +103,11 @@ async def get_sessions(
 
         for s in sessions
     ]
+
+    # Cache the session list for 60 seconds
+    await cache.set(cache_key, sessions_list, ttl_seconds=60)
+
+    return sessions_list
 
 @router.get("/sessions/{session_id}")
 async def get_session(
@@ -297,6 +313,9 @@ async def delete_session(
     await repository.delete_session(
         session_id
     )
+
+    # Invalidate session list cache for this user
+    await cache.delete(f"user:{current_user.id}:sessions")
 
     return {
 
