@@ -55,6 +55,8 @@ security = HTTPBearer(
 
 repository = UserRepository()
 
+from app.cache.memory_cache import cache
+
 
 async def get_current_user(
 
@@ -108,15 +110,21 @@ async def get_current_user(
             detail="Invalid token"
         )
 
-    user = await repository.get_user_by_id(
-        int(user_id)
-    )
+    cache_key = f"user:{user_id}:profile"
+    user = await cache.get(cache_key)
 
     if not user:
-
-        raise HTTPException(
-            status_code=401,
-            detail="User not found"
+        user = await repository.get_user_by_id(
+            int(user_id)
         )
+
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="User not found"
+            )
+        
+        # Cache the user object for 120 seconds
+        await cache.set(cache_key, user, ttl_seconds=120)
 
     return user

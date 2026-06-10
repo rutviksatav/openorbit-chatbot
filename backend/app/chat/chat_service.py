@@ -18,7 +18,7 @@ from app.services.provider_factory import (
     get_llm_provider
 )
 
-
+from app.cache.memory_cache import cache
 
 
 class ChatService:
@@ -129,6 +129,9 @@ class ChatService:
                     title=title
                 )
             )
+
+            # Invalidate user session list cache because the title has changed
+            await cache.delete(f"user:{user_id}:sessions")
 
 
         return {
